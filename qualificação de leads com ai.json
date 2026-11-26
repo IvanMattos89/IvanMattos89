@@ -1,0 +1,726 @@
+{
+  "name": "qualificação de leads com ai",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Sua tarefa é qualificar os leads recebidos. Os leads são respostas vindas do formulário a um grupo comunitário fechado. Utilize os seguintes critérios para definir um lead de qualidade:\n\n1. Procuramos tomadores de decisão que dirijam empresas ou que tenham equipes sob sua responsabilidade. Quanto maior a equipe, melhor. Basicamente, qualquer pessoa com algum nível de responsabilidade deve ser aceita. Esse é o critério principal.\n2. E-mail proveniente de um domínio não padrão. O ideal seria que fosse um domínio corporativo, mas esse é um critério secundário.\n\nPor favor, avalie passo a passo se um lead é de qualidade ou não.\n\nSe pelo menos um dos critérios for atendido, responda com “qualificado”. Caso contrário, responda “não qualificado”. Responda com um JSON da seguinte estrutura: {“rating”:“string”,‘explanation’:“string”}. Responda apenas com o JSON e nada mais!",
+              "role": "model"
+            },
+            {
+              "content": "=Aqui estão as informações do lead:\nNome: {{ $json['Nome Completo'] }}\nE-mail: {{ $json['E-mail'] }}\nCargo: {{ $json.Cargo }}\nÁrea de atuação: {{ $json['Aérea/Setor de atividade'] }}\nTamanho da equipe: {{ $json['Qual tamanho da sua empresa ?'] }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        208
+      ],
+      "id": "c0716087-a5b9-419b-bc4c-5ea2856a77d5",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qnLN6LaBaZpjB8Bb",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Formulário de Contato\n\n*Lead realiza o contato informando: *\n\n1. Nome Completo\n2. Email\n3. Setor/Aérea de Trabalho\n4. Tamanho da empresa",
+        "height": 304,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "a5d24e7b-cac3-41d3-8cff-d053971fc88a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "formTitle": "Contato",
+        "formDescription": "Formulário de contato para equipe de Sales",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nome Completo"
+            },
+            {
+              "fieldLabel": "E-mail",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Cargo"
+            },
+            {
+              "fieldLabel": "Aérea/Setor de atividade",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Consultoria"
+                  },
+                  {
+                    "option": "Marketing"
+                  },
+                  {
+                    "option": "Tecnologia"
+                  },
+                  {
+                    "option": "Vendas"
+                  },
+                  {
+                    "option": "Financeiro"
+                  },
+                  {
+                    "option": "Publicidade e Propaganda"
+                  },
+                  {
+                    "option": "Outro"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Qual tamanho da sua empresa ?",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Apenas eu"
+                  },
+                  {
+                    "option": "2 - 10"
+                  },
+                  {
+                    "option": "11 - 40"
+                  },
+                  {
+                    "option": "41 - 100"
+                  },
+                  {
+                    "option": "Mais de 100"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -416,
+        -16
+      ],
+      "id": "f1fc7a8f-01b6-4262-a981-81820239b397",
+      "name": "Formulário de Contato",
+      "webhookId": "c8011ef7-e101-4e68-be80-97ea8d9a8438"
+    },
+    {
+      "parameters": {
+        "content": "## Fornecimento de instruções para qualificação do Lead\n\n1. Orientação para IA de realizar o tratamento dos dados fornecidos pelo lead\n2. Prompt de interação como user com IA\n3. Transformação da saída em JSON\n",
+        "height": 464,
+        "width": 608,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -224,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "921d988d-0ed4-4c41-8a1b-f81f5b5abeef",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "07b79715-44bf-4ee9-a7ff-c1b48366e0f6",
+              "name": "resposta",
+              "value": "={{JSON.parse($json.content.parts[0].text)  }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        176,
+        208
+      ],
+      "id": "ae32a389-399a-47a8-9cf4-6435222857c1",
+      "name": "extract resposta json"
+    },
+    {
+      "parameters": {
+        "content": "## Merge Forms + Ai\n\nConcatenar os dados do forms e da AI",
+        "height": 464,
+        "width": 512,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "a4c282cd-23c8-4d0f-8559-840b27ac5254",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        640,
+        96
+      ],
+      "id": "45fc1d25-130c-45d1-9b8d-4d03261f7775",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "## Disponibilização para Time\n\n1. Criar os registros dos forms e da IA para o time *Comercial* seguir com o Follow-up",
+        "height": 496,
+        "width": 1140
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        944,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "dabbf0bd-8a1b-49d8-939d-2d3c240ac3cd",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk",
+          "mode": "list",
+          "cachedResultName": "agenda_de_marketing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549985206,
+          "mode": "list",
+          "cachedResultName": "qualificação de leads com ai",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit#gid=549985206"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data": "={{ $json.submittedAt }}",
+            "Nome Completo": "={{ $json['Nome Completo'] }}",
+            "E-mail": "={{ $json['E-mail'] }}",
+            "Cargo": "={{ $json.Cargo }}",
+            "Aérea/Setor de Atividade": "={{ $json['Aérea/Setor de atividade'] }}",
+            "Qual o tamanho da sua empresa?": "={{ $json['Qual tamanho da sua empresa ?'] }}",
+            "Rating": "={{ $json.resposta.rating }}",
+            "Análise do Gemini": "={{ $json.resposta.explanation }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome Completo",
+              "displayName": "Nome Completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "E-mail",
+              "displayName": "E-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cargo",
+              "displayName": "Cargo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Aérea/Setor de Atividade",
+              "displayName": "Aérea/Setor de Atividade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Qual o tamanho da sua empresa?",
+              "displayName": "Qual o tamanho da sua empresa?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Análise do Gemini",
+              "displayName": "Análise do Gemini",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        992,
+        96
+      ],
+      "id": "025adb9e-3626-400e-a0bb-3ca4887093fd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 3,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk",
+          "mode": "list",
+          "cachedResultName": "agenda_de_marketing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549985206,
+          "mode": "list",
+          "cachedResultName": "qualificação de leads com ai",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit#gid=549985206"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        96
+      ],
+      "id": "011cb7fb-d42f-4221-a67e-73cc05d5fdb0",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "0wUcoDaqWQNpiNoT",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "995ec6f1-044b-41fd-b66b-12939fffe057",
+              "leftValue": "={{ $json.Rating }}",
+              "rightValue": "qualificado",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1408,
+        96
+      ],
+      "id": "166e6f59-2825-4833-82b2-21302b7b51d6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk",
+          "mode": "list",
+          "cachedResultName": "agenda_de_marketing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549985206,
+          "mode": "list",
+          "cachedResultName": "qualificação de leads com ai",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit#gid=549985206"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nome Completo": "={{ $('Google Sheets Trigger').item.json['Nome Completo'] }}",
+            "Status de Envio de Email": "Enviado"
+          },
+          "matchingColumns": [
+            "Nome Completo"
+          ],
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome Completo",
+              "displayName": "Nome Completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "E-mail",
+              "displayName": "E-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cargo",
+              "displayName": "Cargo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Aérea/Setor de Atividade",
+              "displayName": "Aérea/Setor de Atividade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Qual o tamanho da sua empresa?",
+              "displayName": "Qual o tamanho da sua empresa?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Análise do Gemini",
+              "displayName": "Análise do Gemini",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status de Envio de Email",
+              "displayName": "Status de Envio de Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1888,
+        80
+      ],
+      "id": "308b3731-93bc-4d07-8746-6ec72aeba1b4",
+      "name": "Documentar o envio do e-mail",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "poyibe1297@dvdee.com",
+        "subject": "Novo Lead Qualificado",
+        "emailType": "text",
+        "message": "=Olá time comercial, \n\nNossa automação de qualificação de leads com Gemini.  \n\nIdentificou um novo LEAD QUALIFICADO. \nSegue o link da planilha   https://encurtador.com.br/QmFL\n\nAtenciosamente.  Time de Marketing",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1648,
+        -16
+      ],
+      "id": "d048622b-4e71-4b19-be90-ba29742b618d",
+      "name": "E-mail para Time Comercial",
+      "webhookId": "3f1aa97e-80d0-4075-9725-bab2726ff7e4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4PuNu9tckZ1yzHUH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json['E-mail'] }}",
+        "subject": "Recebemos o seu interesse!",
+        "emailType": "text",
+        "message": "=Olá  {{ $('Google Sheets Trigger').item.json['Nome Completo'] }},\n\nFicamos muito felizes pelo seu contato.\n\nEncaminhamos para o setor responsável, que realizará a análise, e assim que tivermos uma oportunidade, faremos o retorno. \n\nAtenciosamente.\n\nEmpresa ABC",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        192
+      ],
+      "id": "d9ff7097-51a0-4886-8767-13099691d400",
+      "name": "Mensagem para NÃO Qualificado",
+      "webhookId": "808dbd25-2c6f-46f5-ba19-69cebe7d862b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4PuNu9tckZ1yzHUH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Formulário de Contato": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "extract resposta json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract resposta json": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "E-mail para Time Comercial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem para NÃO Qualificado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail para Time Comercial": {
+      "main": [
+        [
+          {
+            "node": "Documentar o envio do e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "09740961-e22f-4f88-9af9-0728a2d7758e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2e58b7b089f1b4c2db54a3bf40a2d670f4d80ae651e0cb2b2b9e172a0f7cd99"
+  },
+  "nodeGroups": [],
+  "id": "Jk4bdmwwB5nlH7Mh",
+  "tags": []
+}

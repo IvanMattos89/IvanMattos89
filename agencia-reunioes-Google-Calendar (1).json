@@ -1,0 +1,374 @@
+{
+  "name": "agencia-reunioes-Google-Calendar",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        0
+      ],
+      "id": "2dc65e55-dee4-43e2-9bc3-d0e043113b01",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk",
+          "mode": "list",
+          "cachedResultName": "agenda_de_marketing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "organização",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "ae150bba-bdaa-4d21-ad8e-7b7106069298",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7efa0fdd-9d87-4ba3-be26-8d7dc8d7be85",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "Pendente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "1fb0b794-abaf-4e80-83d3-3f15de5deedf",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        128,
+        0
+      ],
+      "id": "84ca477b-5d8b-4ae7-a4db-7a02b29b8133",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "af49ec34-f4a7-46c0-a21a-e9f4a3827729",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "d7b9d8d1-e550-4991-99ff-6010f48e3cae",
+              "name": "titulo",
+              "value": "={{\"Reunião \" + $json.cliente + \" - \" + $json.tipo_reuniao }}",
+              "type": "string"
+            },
+            {
+              "id": "5d447d86-5c79-43e6-9d8a-e6f133ab7223",
+              "name": "inicio",
+              "value": "={{ $json.inicio }}",
+              "type": "string"
+            },
+            {
+              "id": "2a8714cf-ea6d-4978-a15f-493b59162f9d",
+              "name": "fim",
+              "value": "={{ $json.fim }}",
+              "type": "string"
+            },
+            {
+              "id": "6648f766-0a53-457e-912a-db13f34f127d",
+              "name": "descricao",
+              "value": "={{\"Reunião para planejamento de marketing com \" + $json.cliente  }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        352,
+        -96
+      ],
+      "id": "51c528aa-8c13-4f91-a7ba-eb3a92822d0e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "c_58e061d7c6123f32ee18fbc4f62c956b79727f31d98ae67ca64c821221f47c2a@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Time de MKT(n8n)"
+        },
+        "start": "={{ $json.inicio }}",
+        "end": "={{ $json.fim }}",
+        "additionalFields": {
+          "description": "={{ $json.descricao }}",
+          "summary": "={{ $json.titulo }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.4,
+      "position": [
+        576,
+        -96
+      ],
+      "id": "1561f74c-7537-4ccd-b7ae-ed3d12a261cd",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "QSHKIVTDHHeVY0ke",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk",
+          "mode": "list",
+          "cachedResultName": "agenda_de_marketing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "organização",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14QaxpVbZxSf5W9GcOBmInWI4HRM1gXHdvnQ-1nHz7Gk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('If').item.json.id }}",
+            "status": "Agendado",
+            "evento_id": "={{ $json.id }}",
+            "link_evento": "={{ $json.htmlLink }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cliente",
+              "displayName": "cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo_reuniao",
+              "displayName": "tipo_reuniao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inicio",
+              "displayName": "inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fim",
+              "displayName": "fim",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "evento_id",
+              "displayName": "evento_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link_evento",
+              "displayName": "link_evento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        -96
+      ],
+      "id": "13b58501-b229-442b-9ec2-6de35c50e1f1",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9472b27e-ebe1-4254-9caf-b6af36aaeb29",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2e58b7b089f1b4c2db54a3bf40a2d670f4d80ae651e0cb2b2b9e172a0f7cd99"
+  },
+  "nodeGroups": [],
+  "id": "ZSYDGKPVFYsM4rgj",
+  "tags": []
+}

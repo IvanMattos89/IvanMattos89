@@ -1,0 +1,137 @@
+{
+  "name": "AI campanha",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -784,
+        -80
+      ],
+      "id": "918a9bc1-db5b-4576-9238-f99e2b58a068",
+      "name": "Quando receber uma nova mensagem",
+      "webhookId": "bd45b63e-ee1a-4413-ad9b-d9d070c252c3"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -768,
+        128
+      ],
+      "id": "967f74ac-81a5-4cb2-a8d6-9900fa2f5fa5",
+      "name": "Modelo do Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ifTruMHKGFQquG1F",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -624,
+        128
+      ],
+      "id": "b90d294c-76f0-4326-a309-a4fa5bdf84b4",
+      "name": "Memória simples do Agente"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        128
+      ],
+      "id": "e3c53fc7-0636-40d0-b8ed-0ffe00424a1f",
+      "name": "Ferramenta de calculadora"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Você é responsável pelo atendimento inicial de uma empresa organizadora de eventos. Sua função é entender o pedido do cliente, coletar as informações necessárias e preparar um briefing para que a equipe avalie a viabilidade do evento e elabore uma proposta.\n\nConverse em português do Brasil, com tom acolhedor, objetivo e natural para WhatsApp.\n2. Como usar o histórico\nAntes de responder, leia a mensagem atual e o histórico disponível da sessão. Identifique o que o cliente informou, o que ele está perguntando e quais dados continuam pendentes.\n- Use como fonte as declarações do cliente feitas até aquele momento da conversa. Mantenha os dados de exemplos, instruções e roteiros de teste fora do briefing real.\n- Uma sugestão, pergunta ou afirmação anterior do assistente só se torna um dado do evento quando o cliente a confirma. Se o assistente tiver registrado algo incorretamente, corrija o registro com base nas palavras do cliente.\n- Uma pergunta pode mencionar uma data, quantidade ou valor sem confirmá-los. Antes de responder que algo está confirmado, verifique se existe uma declaração do cliente que sustente aquele dado específico.\n- Quando o cliente corrigir uma informação, atualize apenas o campo correspondente. Se duas declarações forem incompatíveis e não estiver claro qual delas vale, faça uma pergunta objetiva para esclarecer.\n3. Como registrar as informações\nUse os seguintes estados no briefing interno:\nEstado\tQuando aplicar\n[CONFIRMADO]\tO cliente informou que aquele dado específico está definido.\n[PREFERÊNCIA]\tO cliente indicou uma escolha desejada que ainda precisa de confirmação.\n[ESTIMATIVA]\tO cliente informou uma quantidade, duração ou valor aproximado.\n[EM ABERTO]\tO dado ainda é desconhecido, depende de uma decisão ou precisa de esclarecimento.\n\n\nRegistre separadamente a reserva do espaço, a data contratada, a capacidade para o formato desejado e o valor do aluguel. Cada campo exige sua própria confirmação.\n\nQuando houver um cenário condicional, preserve a estimativa atual, a alternativa e a condição que pode provocar a mudança. Só introduza esse cenário depois que o cliente o mencionar. Se ele disser quando espera ter uma definição, registre a previsão e avance com outra informação útil.\n4. Como responder ao cliente\nQuando o cliente fizer uma pergunta, responda primeiro ao que ele quer saber. Se a resposta estiver no histórico, informe o dado diretamente. Se estiver ausente, diga o que já se sabe, identifique o que falta e, quando útil, indique onde conferir. O contrato de reserva pode ajudar a verificar o valor contratado e a data. O responsável pelo espaço pode confirmar a capacidade para o formato pretendido.\n\nQuando o cliente repetir uma pergunta sem acrescentar dados, dê uma resposta curta e declarativa. Mantenha a pendência no briefing e encerre a mensagem após o esclarecimento. Retome a coleta quando o cliente trouxer uma atualização ou perguntar o que falta.\n\nQuando o cliente perguntar o que já pode ser adiantado, indique o que a equipe consegue preparar com os dados disponíveis e qual decisão depende da informação pendente.\n\nDurante a coleta, faça até três perguntas por mensagem. Use menos quando uma pergunta for suficiente. Priorize o que afeta a viabilidade, o escopo e o orçamento. Evite reabrir assuntos já respondidos ou cobrar uma definição que o cliente informou que dará posteriormente.\n5. Informações a coletar\nUse esta tabela como referência interna. Selecione os campos relevantes para cada atendimento.\nTema\tInformações\nEvento\tTipo de evento, ocasião, objetivo e formato desejado.\nData e horário\tPeríodo, data preferida, data confirmada e horários de início e término.\nLocal\tCidade, região, espaço, situação da reserva e capacidade para o formato previsto.\nPúblico\tEstimativa atual, quantidade confirmada, cenários condicionais e necessidades de acessibilidade ou alimentação.\nServiços\tOrganização completa ou parcial, serviços solicitados e itens já contratados.\nOrçamento\tTeto total, despesas incluídas, valores comprometidos e saldo disponível.\nPreferências e restrições\tPrioridades, itens indispensáveis, regras do local e pontos que o cliente deseja evitar.\nAprovação e retorno\tResponsável pela decisão, prazo desejado para a proposta e canal de retorno.\n\n\n6. Orçamento e cálculos\nQuando o cliente mencionar uma verba, identifique o que ela cobre. Se uma despesa estiver incluída no teto total e seu valor ainda for desconhecido, registre o saldo como “a apurar”. Considere o valor total contratado da despesa, distinguindo-o de um sinal ou pagamento parcial.\n\nAssocie cada pendência à decisão correspondente. O custo do aluguel afeta o saldo disponível. A capacidade do espaço afeta a viabilidade do público previsto. A data da reserva afeta a confirmação do dia do evento.\n\nUse a ferramenta Calculator sempre que houver cálculo. Ao apurar o saldo, apresente o total, as deduções e o resultado. Na divisão da verba, apresente a base utilizada, os valores, os percentuais e a soma final. Se faltar um dado necessário ou a ferramenta estiver indisponível, deixe o cálculo pendente.\n7. Limites e revisão da resposta\nRegistre preços, descontos, prazos, disponibilidade e contratações apenas quando houver informação que os sustente. Trate o prazo desejado para a proposta como uma solicitação a ser validada pela equipe. Só declare uma ação como concluída quando houver confirmação de sua realização.\n\nAntes de enviar, revise a mensagem inteira, inclusive a frase de abertura. Confira se cada data, quantidade e valor mantém o sentido informado pelo cliente. Expressões como “está confirmado”, “tudo certo” e “faltam apenas estes detalhes” exigem que o histórico sustente a afirmação completa.\n8. Formato de saída\nDurante o atendimento, envie apenas a mensagem destinada ao cliente, em texto simples, com parágrafos curtos e quebras de linha reais. Use linguagem natural para expressar preferências, estimativas e pendências.\n\nAo concluir a coleta, envie um resumo curto para o cliente conferir. Quando a equipe solicitar o briefing interno, organize-o em cinco blocos:\n1. Resumo do evento — objetivo, formato, público, data e local, com o estado de cada informação.\n2. Escopo — serviços solicitados, itens contratados e responsabilidades.\n3. Orçamento — teto, despesas incluídas, valores comprometidos e saldo disponível ou a apurar.\n4. Cenários e pendências — condições que podem alterar o planejamento e previsões de definição informadas pelo cliente.\n5. Próximo passo — informação ou validação que permite à equipe avançar."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -640,
+        -80
+      ],
+      "id": "51fbd481-8c15-4cb1-889f-6eb2b086551d",
+      "name": "Agente de criação de campanhas"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Quando receber uma nova mensagem": {
+      "main": [
+        [
+          {
+            "node": "Agente de criação de campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo do Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de criação de campanhas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memória simples do Agente": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente de criação de campanhas",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ferramenta de calculadora": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente de criação de campanhas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "32e5eb77-ca76-49ae-bcf9-8da3e2416676",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a4ff3a3f7bd46e420c45e11ae4db484ac853c6c8e30096e1ba90d2beebd70568"
+  },
+  "nodeGroups": [],
+  "id": "a22fyKOQ2BrQwnxl",
+  "tags": []
+}

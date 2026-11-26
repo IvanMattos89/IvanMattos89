@@ -1,0 +1,912 @@
+{
+  "name": "escola_criativa",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE",
+          "mode": "list",
+          "cachedResultName": "Escola Criativa - Avise me Cursos (SHEETS)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379084565,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit#gid=379084565"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1904,
+        -448
+      ],
+      "id": "8f43f873-da7b-40d5-a7c4-233ad68387ae",
+      "name": "Consultar contatos cadastrados",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "c4ae0cc3-3ff8-4975-9eae-69a00585781f",
+              "leftValue": "={{ $json.Consentimento }}",
+              "rightValue": "Sim",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cc16f45c-d76a-4b69-a927-3dad2dd884ac",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Pendente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1664,
+        -448
+      ],
+      "id": "6fb33719-2c2c-4902-89e2-1043ec25e730",
+      "name": "Verificar consentimento e status"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você é redator de marketing educacional. Crie um e-mail breve para divulgar um curso. Nome:{{ $json['Nome Completo'] }} . Interesse: {{ $json.Interesse }} . Não invente preço, desconto, vagas, certificado, data ou benefícios. Não faça promessas de emprego. Máximo de 100 palavras. Responda APENAS com um objeto JSON válido sem blocos de Markdown, contendo exatamente duas chaves string: \"assunto\" e \"mensagem\". Use texto simples sem HTML."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -1152,
+        -464
+      ],
+      "id": "2c5784e2-52f8-42de-b508-d8c32fec172a",
+      "name": "Gerar Texto Mensagem",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qnLN6LaBaZpjB8Bb",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Fase 1 \n\nColeta dos dados via Google Forms e hierarquizados para produção de e-mails via Google Gemini.\n",
+        "height": 384,
+        "width": 1808
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2256,
+        -624
+      ],
+      "typeVersion": 1,
+      "id": "609fad54-29fb-44e2-9d1d-278c25d9ef66",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Executado uma vez para item\n//Recuperação dos dados correspondentes à resposta do Gemini\n\n// variavel dados de origem\nconst origem = $('Edit Fields1').item.json;\nconst dados = $json;\n\nlet texto = dados.content?.parts?.map(p => p.text ?? '').join('')\n  ?? dados.candidates?.[0]?.content?.part?.map(p => p.text ?? '').join('')\n  ?? dados.text ?? dados.output ?? '';\n\nif (typeof texto !== 'string') texto = JSON.stringify(texto);\ntexto = texto.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\n\n//válida se o texto foi convertido para o formato JSON\nlet resposta;\ntry{ resposta = JSON.parse(texto); }\ncatch (e) { throw new Error('Gemini não retornou JSON válido: ' +texto.slice(0,350)); }\n\n//checagem do tipo para resposta e mensagem\nif (typeof resposta.assunto !== 'string' || !resposta.assunto.trim() ||\n    typeof resposta.mensagem !== 'string' || !resposta.mensagem.trim()) {\n   throw new Error('Gemini não retornou assunto e mensagem válidos.');\n    }\n\nreturn{ json:{\n  ra:origem.ra,\n  nomecompleto:origem.nomecompleto,\n  email:origem.email,\n  interesse:origem.interesse,\n  assunto:resposta.assunto.trim(),\n  mensagem:resposta.mensagem.trim(),\n  status:'Em revisão'\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -464
+      ],
+      "id": "dc1e4ecc-ffa1-4572-99c7-82cde5eb3932",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "73a07fe5-792c-42bc-b978-325b49067511",
+              "name": "RA",
+              "value": "={{ $json.RA }}",
+              "type": "number"
+            },
+            {
+              "id": "bf0b28c3-efe7-44a3-bf1f-6537ed4c785a",
+              "name": "Nome Completo",
+              "value": "={{ $json['Nome Completo'] }}",
+              "type": "string"
+            },
+            {
+              "id": "8a47cb2e-2a6c-4f67-a146-fe3200a9eef5",
+              "name": "E-mail",
+              "value": "={{ $json['E-mail'] }}",
+              "type": "string"
+            },
+            {
+              "id": "2e8b4620-b77f-4e81-acf6-12e3e3836bad",
+              "name": "Interesse",
+              "value": "={{ $json.Interesse }}",
+              "type": "string"
+            },
+            {
+              "id": "b59410bc-1948-48cb-986a-dae46792acbc",
+              "name": "objetivo",
+              "value": "Divulgação do Curso",
+              "type": "string"
+            },
+            {
+              "id": "0511ac4d-8b66-463e-8ef4-1e689860d660",
+              "name": "tom",
+              "value": "Profissional e acolhedor",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1376,
+        -464
+      ],
+      "id": "45c757e7-f1dc-4a74-9471-d77bb1ce8cb1",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "content": "## Fase 2\nApós aprovação do conteúdo gerado pela LLM, seguirá para o envio por email.",
+        "height": 512,
+        "width": 1824,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2256,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "ccfd9c9c-2759-4f9e-8cd2-8976d78aec75",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE",
+          "mode": "list",
+          "cachedResultName": "Escola Criativa - Avise me Cursos (SHEETS)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379084565,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit#gid=379084565"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "RA": "={{ $('Edit Fields1').item.json.RA }}",
+            "E-mail": "={{ $('Edit Fields1').item.json['E-mail'] }}",
+            "assunto": "={{ $json.assunto }}",
+            "mensagem": "={{ $json.mensagem }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "RA"
+          ],
+          "schema": [
+            {
+              "id": "Carimbo de data/hora",
+              "displayName": "Carimbo de data/hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome Completo",
+              "displayName": "Nome Completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-mail",
+              "displayName": "E-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RA",
+              "displayName": "RA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Interesse",
+              "displayName": "Interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Consentimento",
+              "displayName": "Consentimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assunto",
+              "displayName": "assunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensagem",
+              "displayName": "mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -560,
+        -464
+      ],
+      "id": "c1c53bbc-eaff-4f41-b814-1c5546662d51",
+      "name": "Atualizará celúlas do Forms do aluno com dados que vieram do JSON(Javascript)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE",
+          "mode": "list",
+          "cachedResultName": "Escola Criativa - Avise me Cursos (SHEETS)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379084565,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit#gid=379084565"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2224,
+        32
+      ],
+      "id": "ab1da2a5-4c49-42fa-b90d-ec5f366ae84f",
+      "name": "Leitura dos dados da Planilha (Status: \"Aprovado\")",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "613c0ede-15b9-4ec8-922d-f374cab7a10d",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Aprovado",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "9a510e9e-56d4-4384-98be-8671f78877cf",
+              "leftValue": "={{ $json['E-mail'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "14e1c4dc-ba4d-468b-a7b2-2a9b2f286dda",
+              "leftValue": "={{ $json.assunto }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "32b3bf13-e0e1-4d77-91ef-c3c011d62208",
+              "leftValue": "={{ $json.mensagem }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -2000,
+        32
+      ],
+      "id": "a29ef8dd-9594-4145-b803-c62a3f2ea1e3",
+      "name": "Aprovado e e-mail, assunto e mensagem não estão vazios?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE",
+          "mode": "list",
+          "cachedResultName": "Escola Criativa - Avise me Cursos (SHEETS)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379084565,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit#gid=379084565"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Enviando",
+            "RA": "={{ $json.RA }}"
+          },
+          "matchingColumns": [
+            "RA"
+          ],
+          "schema": [
+            {
+              "id": "Carimbo de data/hora",
+              "displayName": "Carimbo de data/hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome Completo",
+              "displayName": "Nome Completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-mail",
+              "displayName": "E-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RA",
+              "displayName": "RA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Interesse",
+              "displayName": "Interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Consentimento",
+              "displayName": "Consentimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assunto",
+              "displayName": "assunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensagem",
+              "displayName": "mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1776,
+        -64
+      ],
+      "id": "86796ffd-09ef-4e8e-b418-cb679b2bb564",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Aprovado e e-mail, assunto e mensagem não estão vazios?').item.json['E-mail'] }}",
+        "subject": "={{ $('Aprovado e e-mail, assunto e mensagem não estão vazios?').item.json.assunto }}",
+        "emailType": "text",
+        "message": "={{ $('Aprovado e e-mail, assunto e mensagem não estão vazios?').item.json.mensagem }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1552,
+        -64
+      ],
+      "id": "dce7cf6b-b658-45ef-bdd8-d70bcde8b7e7",
+      "name": "Send a message",
+      "webhookId": "8cc120b2-0462-4811-bb41-269bccd4c3d3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4PuNu9tckZ1yzHUH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE",
+          "mode": "list",
+          "cachedResultName": "Escola Criativa - Avise me Cursos (SHEETS)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379084565,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit#gid=379084565"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "RA": "={{ $('Update row in sheet').item.json.RA }}",
+            "Status": "Enviado"
+          },
+          "matchingColumns": [
+            "RA"
+          ],
+          "schema": [
+            {
+              "id": "Carimbo de data/hora",
+              "displayName": "Carimbo de data/hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome Completo",
+              "displayName": "Nome Completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-mail",
+              "displayName": "E-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RA",
+              "displayName": "RA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Interesse",
+              "displayName": "Interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Consentimento",
+              "displayName": "Consentimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assunto",
+              "displayName": "assunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mensagem",
+              "displayName": "mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1328,
+        -64
+      ],
+      "id": "1248a3d9-af44-419e-99dd-d051b5a06a2c",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2128,
+        -448
+      ],
+      "id": "3ddf49c3-1224-4f3f-9292-b866ea087213",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Consultar contatos cadastrados": {
+      "main": [
+        [
+          {
+            "node": "Verificar consentimento e status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar consentimento e status": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Texto Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Gerar Texto Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Atualizará celúlas do Forms do aluno com dados que vieram do JSON(Javascript)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizará celúlas do Forms do aluno com dados que vieram do JSON(Javascript)": {
+      "main": [
+        [
+          {
+            "node": "Leitura dos dados da Planilha (Status: \"Aprovado\")",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leitura dos dados da Planilha (Status: \"Aprovado\")": {
+      "main": [
+        [
+          {
+            "node": "Aprovado e e-mail, assunto e mensagem não estão vazios?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprovado e e-mail, assunto e mensagem não estão vazios?": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Consultar contatos cadastrados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "23cb13d5-542e-47ef-8126-b9b448de4e9d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2e58b7b089f1b4c2db54a3bf40a2d670f4d80ae651e0cb2b2b9e172a0f7cd99"
+  },
+  "nodeGroups": [],
+  "id": "l40AL0AmaBkdyk1Q",
+  "tags": []
+}

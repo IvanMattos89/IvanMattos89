@@ -1,0 +1,275 @@
+{
+  "name": "escola_criativa",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE",
+          "mode": "list",
+          "cachedResultName": "Escola Criativa - Avise me Cursos (SHEETS)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379084565,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16j8HJRGjZyULMRUPsvJ4j4pYBtFHVWJamUJ16XwcsWE/edit#gid=379084565"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1712,
+        -384
+      ],
+      "id": "8f43f873-da7b-40d5-a7c4-233ad68387ae",
+      "name": "Consultar contatos cadastrados",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        -384
+      ],
+      "id": "9354fe4c-0575-484b-a176-880a0a1fca53",
+      "name": "Execução manual com \"Click\""
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "c4ae0cc3-3ff8-4975-9eae-69a00585781f",
+              "leftValue": "={{ $json.Consentimento }}",
+              "rightValue": "Sim",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cc16f45c-d76a-4b69-a927-3dad2dd884ac",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Pendente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1472,
+        -384
+      ],
+      "id": "6fb33719-2c2c-4902-89e2-1043ec25e730",
+      "name": "Verificar consentimento e status"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você é redator de marketing educacional. Crie um e-mail breve para divulgar um curso. Nome:{{ $json['Nome Completo'] }} . Interesse: {{ $json.Interesse }} . Não invente preço, desconto, vagas, certificado, data ou benefícios. Não faça promessas de emprego. Máximo de 100 palavras. Responda APENAS com um objeto JSON válido sem blocos de Markdown, contendo exatamente duas chaves string: \"assunto\" e \"mensagem\". Use texto simples sem HTML."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -400
+      ],
+      "id": "2c5784e2-52f8-42de-b508-d8c32fec172a",
+      "name": "Gerar Texto Mensagem",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qnLN6LaBaZpjB8Bb",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Fase 1 \n\nColeta dos dados via Google Forms e hierarquizados para produção de e-mails via Google Gemini.\n",
+        "height": 384,
+        "width": 1536
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2000,
+        -560
+      ],
+      "typeVersion": 1,
+      "id": "609fad54-29fb-44e2-9d1d-278c25d9ef66",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Executado uma vez para item\n//Recuperação dos dados correspondentes à resposta do Gemini\n\n// variavel dados de origem\nconst origem = $('Edit Fields1').item.json;\nconst dados = $json;\n\nlet texto = dados.content?.parts?.map(p => p.text ?? '').join('')\n  ?? dados.candidates?.[0]?.content?.part?.map(p => p.text ?? '').join('')\n  ?? dados.text ?? dados.output ?? '';\n\nif (typeof texto !== 'string') texto = JSON.stringify(texto);\ntexto = texto.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\n\n//válida se o texto foi convertido para o formato JSON\nlet resposta;\ntry{ resposta = JSON.parse(texto); }\ncatch (e) { throw new Error('Gemini não retornou JSON válido: ' +texto.slice(0,350)); }\n\n//checagem do tipo para resposta e mensagem\nif (typeof resposta.assunto !== 'string' || !resposta.assunto.trim() ||\n    typeof resposta.mensagem !== 'string' || !resposta.mensagem.trim()) {\n   throw new Error('Gemini não retornou assunto e mensagem válidos.');\n    }\n\nreturn{ json:{\n  ra:origem.ra,\n  nomecompleto:origem.nomecompleto,\n  email:origem.email,\n  interesse:origem.interesse,\n  assunto:resposta.assunto.trim(),\n  mensagem:resposta.mensagem.trim(),\n  status:'Em revisão'\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -400
+      ],
+      "id": "dc1e4ecc-ffa1-4572-99c7-82cde5eb3932",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "73a07fe5-792c-42bc-b978-325b49067511",
+              "name": "RA",
+              "value": "={{ $json.RA }}",
+              "type": "number"
+            },
+            {
+              "id": "bf0b28c3-efe7-44a3-bf1f-6537ed4c785a",
+              "name": "Nome Completo",
+              "value": "={{ $json['Nome Completo'] }}",
+              "type": "string"
+            },
+            {
+              "id": "8a47cb2e-2a6c-4f67-a146-fe3200a9eef5",
+              "name": "E-mail",
+              "value": "={{ $json['E-mail'] }}",
+              "type": "string"
+            },
+            {
+              "id": "2e8b4620-b77f-4e81-acf6-12e3e3836bad",
+              "name": "Interesse",
+              "value": "={{ $json.Interesse }}",
+              "type": "string"
+            },
+            {
+              "id": "b59410bc-1948-48cb-986a-dae46792acbc",
+              "name": "objetivo",
+              "value": "Divulgação do Curso",
+              "type": "string"
+            },
+            {
+              "id": "0511ac4d-8b66-463e-8ef4-1e689860d660",
+              "name": "tom",
+              "value": "Profissional e acolhedor",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1184,
+        -400
+      ],
+      "id": "45c757e7-f1dc-4a74-9471-d77bb1ce8cb1",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execução manual com \"Click\"": {
+      "main": [
+        [
+          {
+            "node": "Consultar contatos cadastrados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar contatos cadastrados": {
+      "main": [
+        [
+          {
+            "node": "Verificar consentimento e status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar consentimento e status": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Texto Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Gerar Texto Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "372ae9c1-9cba-4135-9d21-12475227349b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2e58b7b089f1b4c2db54a3bf40a2d670f4d80ae651e0cb2b2b9e172a0f7cd99"
+  },
+  "nodeGroups": [],
+  "id": "l40AL0AmaBkdyk1Q",
+  "tags": []
+}

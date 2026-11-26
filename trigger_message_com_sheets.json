@@ -1,0 +1,159 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "961c5170-46f7-4e53-b406-7760ab84afb3",
+      "name": "When chat message received",
+      "webhookId": "ea221537-6bbe-4ed1-b26f-018b43b674c5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "101e123b-e3fe-4570-be28-e2c871b6f40a",
+              "name": "idConversa",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "8c147c2a-9e91-4484-a079-daddeca623fb",
+              "name": "mensagem",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "de11178a-cc5f-424f-8c5f-b065a16f742a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1axXyoZTwcdueyD6m7bSm5Na5nTER1G8IrWHXNurN5L4",
+          "mode": "list",
+          "cachedResultName": "TESTE ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1axXyoZTwcdueyD6m7bSm5Na5nTER1G8IrWHXNurN5L4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1axXyoZTwcdueyD6m7bSm5Na5nTER1G8IrWHXNurN5L4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idConversa",
+              "displayName": "idConversa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensagem",
+              "displayName": "Mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mensagem",
+              "displayName": "mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "52f0d124-3686-4be8-9201-7a8914ac4b4d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8jLSNsSSwMwx2dlB",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0a315c08-a425-4ff7-90c6-8ae79f85037e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2e58b7b089f1b4c2db54a3bf40a2d670f4d80ae651e0cb2b2b9e172a0f7cd99"
+  },
+  "nodeGroups": [],
+  "id": "sxZQj4eMrmyHZFkP",
+  "tags": []
+}
